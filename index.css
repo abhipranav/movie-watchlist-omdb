@@ -1,0 +1,38 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter";
+}
+main {
+    margin: 0 auto;
+    max-width: 34.375rem;
+    width: 100%;
+}
+.header {
+    width: 100%;
+    height: 13rem;
+    /* margin: 0 auto; */
+    padding: 0 3.5em;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+              url("https://images.unsplash.com/photo-1628432136678-43ff9be34064?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=3063");
+    background-position: 0 -9.893rem;
+    background-size: 100% 423.007%;
+    background-repeat: no-repeat;
+    color: white;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+.header > h1 {
+    font-size: 2.67469rem;
+
+}
+.header > p {
+    font-size: 0.875rem;
+
+}
