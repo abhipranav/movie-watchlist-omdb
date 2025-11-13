@@ -1,18 +1,45 @@
+import { movieKey, createMovieCard } from './constants.js'
+import { API_KEY } from './config.js'
+
 const searchBtn = document.getElementById("search-btn")
 const containerEl = document.getElementById("container")
 const formEl =document.getElementById("search-bar")
 const searchInput = document.getElementById("search-input")
+const watchlistPage = document.getElementById("watchlist-page")
+const MAX_SEARCH_RESULTS = 5
 let movieList =[]
-const movieKey = 'myMovies'
-let existingMovies = JSON.parse(localStorage.getItem(movieKey)) || [];
+const movieCache = new Map()
 
+const ADDED_BUTTON_HTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 0C3.58 0 0 3.58 0 8C0 12.42 3.58 16 8 16C12.42 16 16 12.42 16 8C16 3.58 12.42 0 8 0ZM6.5 11.5L3 8L4.41 6.59L6.5 8.67L11.59 3.58L13 5L6.5 11.5Z" fill="#10B981"/>
+    </svg>
+    <p>Added</p>
+`
+
+watchlistPage.addEventListener('click',() => window.location.href = "watchlist.html")
 
 searchBtn.addEventListener('click', function searchMovies(e) {
     e.preventDefault()
     const formData = new FormData(formEl)
-    const query = encodeURIComponent(formData.get("movie"))
+    const movieInput = formData.get("movie")
+    
+    if(!movieInput || !movieInput.trim()){
+        containerEl.innerHTML = `<div class="placeholder"><p>Please enter a movie title</p></div>`
+        return
+    }
+    
+    const query = encodeURIComponent(movieInput)
     console.log(query)
-    fetch(`https://www.omdbapi.com/?apikey=e26bf671&s=${query}`)
+        
+    // Show loading state
+    containerEl.innerHTML = `
+        <div class="placeholder">
+            <p>Searching for "${movieInput}"...</p>
+        </div>
+    `
+    
+    fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`)
     .then(res => res.json())
     .then(data => {
         console.log(data)
@@ -20,72 +47,64 @@ searchBtn.addEventListener('click', function searchMovies(e) {
             console.log(data.Search)
             getMovies(data.Search)
         } else {
+            let errorMessage = "Unable to find what you're looking for. Please try another search."
+            
+            if(data.Error === "Too many results.") {
+                errorMessage = "Too many results found. Please be more specific with your search."
+            } else if(data.Error === "Invalid API key!") {
+                errorMessage = "Configuration error. Please contact support or check your API key."
+            }
+
             containerEl.innerHTML = `
             <div class="placeholder">
-                <p>Unable to find what you’re looking for. Please try another search.</p>
+                <p>${errorMessage}</p>
             </div>`
             console.log(data.Error)
         }
         console.log(searchInput.value)
     })
+    .catch(error => {
+        console.error("API Error: ", error)
+        containerEl.innerHTML = `
+            <div class="placeholder">
+                <p>Something went wrong. Please try again later.</p>
+            </div>`
+    })
 })
 
 function getMovies(movieArr) {
-    containerEl.innerHTML =''
+    containerEl.innerHTML = ''
     movieList = []
-    const promises = movieArr.slice(0,3).map(movie =>
-        fetch(`https://www.omdbapi.com/?apikey=e26bf671&i=${movie.imdbID}`)
+    
+    const promises = movieArr.slice(0, MAX_SEARCH_RESULTS).map(movie => {
+        if(movieCache.has(movie.imdbID)) {
+            return Promise.resolve(movieCache.get(movie.imdbID))
+        }
+        
+        return fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&i=${movie.imdbID}`)
             .then(res => res.json())
-    )
-    let i = 0
+            .then(data => {
+                movieCache.set(movie.imdbID, data)
+                return data
+            })
+    })
+    
     Promise.all(promises).then(moviesData => {
-        moviesData.forEach(data => {
-            movieList.push(data)
-            console.log(data)
-            console.log("search result: "+ i)
-            i++
-            containerEl.innerHTML += createMovieCard(data)
+        movieList = moviesData
+        const html = moviesData.map(data => createMovieCard(data)).join('')
+        containerEl.innerHTML = html
+
+        // Update button state for movies already in watchlist
+        const existingMovies = JSON.parse(localStorage.getItem(movieKey)) || []
+        existingMovies.forEach(savedMovie => {
+            const watchlistBtn = document.getElementById(savedMovie.imdbID)
+            if(watchlistBtn) {
+                watchlistBtn.innerHTML = ADDED_BUTTON_HTML
+            }
         })
+
         searchInput.value = ''
     })
-
-}
-
-function createMovieCard(data) {
-    if(data.Poster === "N/A"){
-                console.log("Using placeholder for:", data.Title)
-                data.Poster = "source/placeholder.jpeg"
-            }
-
-    return `
-        <div class="movie">
-            <img class="poster" src="${data.Poster}" alt="${data.Title}" onerror="this.src='source/placeholder.jpeg'">
-            <div class="details">
-                <div class="heading">
-                    <h2>${data.Title}</h2>
-                    <div class="rating">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="11" viewBox="0 0 12 11" fill="none">
-                        <path d="M4.86276 0.518226C5.08727 -0.172757 6.06483 -0.172758 6.28934 0.518225L7.09152 2.98707C7.19193 3.29609 7.47989 3.50531 7.80481 3.50531H10.4007C11.1273 3.50531 11.4293 4.43502 10.8416 4.86207L8.74142 6.3879C8.47856 6.57889 8.36856 6.91741 8.46897 7.22643L9.27115 9.69528C9.49566 10.3863 8.7048 10.9609 8.11702 10.5338L6.01689 9.00797C5.75402 8.81699 5.39808 8.81699 5.13521 9.00797L3.03508 10.5338C2.4473 10.9609 1.65644 10.3863 1.88095 9.69528L2.68313 7.22643C2.78354 6.91741 2.67354 6.57889 2.41068 6.3879L0.31055 4.86207C-0.277235 4.43502 0.0248458 3.50531 0.751388 3.50531H3.34729C3.67221 3.50531 3.96017 3.29609 4.06058 2.98707L4.86276 0.518226Z" fill="#FEC654"/>
-                        </svg>
-                        <p>${data.imdbRating}</p>
-                    </div>
-                </div>
-                <div class="sub-heading">
-                    <p>${data.Runtime}</p>
-                    <p>${data.Genre}</p>
-                    <div role="button" tabindex="0" class="watchlist" id="${data.imdbID}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16ZM9 5C9 4.44772 8.55228 4 8 4C7.44772 4 7 4.44772 7 5V7H5C4.44772 7 4 7.44771 4 8C4 8.55228 4.44772 9 5 9H7V11C7 11.5523 7.44772 12 8 12C8.55228 12 9 11.5523 9 11V9H11C11.5523 9 12 8.55228 12 8C12 7.44772 11.5523 7 11 7H9V5Z" fill="#111827"/>
-                        </svg>
-                        <p>Watchlist</p>
-                    </div>
-                </div>
-                <div class="info-body">
-                    <p>${data.Plot}</p>
-                </div>
-            </div>
-        </div>
-    `
 }
 
 containerEl.addEventListener("click",function(e) {
@@ -93,9 +112,10 @@ containerEl.addEventListener("click",function(e) {
     
     if(watchlistBtn) {
         const movieId =  watchlistBtn.id
+        const existingMovies = JSON.parse(localStorage.getItem(movieKey)) || []
         console.log("Watchlist Clicked for movie ID:",movieId)
-
         const isAdded = existingMovies.find(m => m.imdbID === movieId)
+        
         if(isAdded) {
             console.log("Movie already added to Watchlist")
             return
@@ -107,6 +127,9 @@ containerEl.addEventListener("click",function(e) {
             console.log("Adding to watchlist: ",movie.Title)
             existingMovies.push(movie)
             localStorage.setItem(movieKey, JSON.stringify(existingMovies))
+
+            // Visual feedback:
+            watchlistBtn.innerHTML = ADDED_BUTTON_HTML
         }
 
     }

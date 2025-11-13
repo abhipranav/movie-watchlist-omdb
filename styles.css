@@ -1,14 +1,15 @@
 *, *::before, *::after {
   box-sizing: border-box;
 }
+
 html,
 body {
     margin: 0;
     padding: 0;
-    font-family: "Inter";
+    font-family: "Inter", sans-serif;
     background: linear-gradient(135deg, #8bec96 0%, #6868ea 50%, #ed8cee 100%);
-
 }
+
 main {
     margin: 0 auto;
     max-width: 34.375rem;
@@ -16,12 +17,12 @@ main {
     border: 1px solid var(--gray-300, #D1D5DB);
     border-bottom: none;
     min-height: 100vh;
-    background-color: whitesmoke;
+    background: white;
 }
+
 .header {
     width: 100%;
     height: 13rem;
-    /* margin: 0 auto; */
     padding: 0 2.5em;
     background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
               url("https://images.unsplash.com/photo-1628432136678-43ff9be34064?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=3063");
@@ -34,22 +35,69 @@ main {
     align-items: center;
     justify-content: space-between;
 }
+
 .header > h1 {
     font-size: 2.67469rem;
-
+    margin: 0;
 }
+
 .header > p {
     font-size: 0.875rem;
     font-weight: 700;
     line-height: 1.25rem;
+    cursor: pointer;
 }
+
+#watchlist-page,
 #search-page {
     cursor: pointer;
+}
+
+.search-bar {
+    margin: 0 2.75em;
+    padding: 0.5em 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #D1D5DB;
+    gap: 0.5em;
+}
+
+#search-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    padding: 0.5em;
+    font-size: 0.875rem;
+}
+
+#search-input:focus {
+    outline: none;
+}
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  display: none;
+}
+
+#search-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5em;
+}
+
+.container {
+    margin: 1.5em 2.75em 0;
 }
 
 .container > p {
     margin-top: 0.5em;
 }
+
 .placeholder {
     margin: 12em auto 0;
     display: flex;
@@ -64,6 +112,11 @@ main {
     gap: 1em;
 }
 
+.placeholder > p,
+.add-movies > h4 {
+    margin: 0;
+}
+
 .add-movies {
     display: flex;
     flex-direction: row;
@@ -74,14 +127,9 @@ main {
     font-weight: 700;
     line-height: 1.25rem;
     gap: 0.5em;
+    cursor: pointer;
 }
-.placeholder >p,
-.add-movies > h4 {
-    margin: 0;
-}
-.container {
-    margin: 1.5em 2.75em 0;
-}
+
 .movie {
     padding: 1.5em 0;
     border-bottom: 1px solid #E5E7EB;
@@ -89,15 +137,20 @@ main {
     flex-direction: row;
     gap: 1.25em;
 }
+
 .poster {
     width: 6.1875rem;
-    height: 100%;
-    font-size: 0.5em;
+    height: auto;
+    object-fit: cover;
+    flex-shrink: 0;
 }
+
 .details {
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
 }
+
 .heading,
 .sub-heading,
 .info-body {
@@ -107,14 +160,16 @@ main {
     gap: 1em;
     margin-bottom: 1em;
 }
+
 .heading > h2 {
     font-size: 1.125rem;
     font-weight: 500;
     line-height: 1.25rem;
-    margin-bottom: 0;
     margin: 0;
 }
+
 .rating,
+.watchlist,
 .remove {
     display: flex;
     flex-direction: row;
@@ -122,19 +177,27 @@ main {
     gap: 0.5em;
 }
 
-.rating >p,
-.sub-heading >p,
-.remove >p,
-.info-body >p {
+.rating > p,
+.sub-heading > p,
+.watchlist > p,
+.remove > p,
+.info-body > p {
     font-size: 0.75rem;
     font-weight: 400;
     line-height: 1.25rem;
     margin: 0;
 }
 
+.watchlist,
 .remove {
     cursor: pointer;
+    user-select: none;
 }
-.add-movies {
-    cursor: pointer;
+
+/* Hover effects */
+.watchlist:hover,
+.remove:hover,
+.add-movies:hover {
+    opacity: 0.7;
+    transition: opacity 0.2s;
 }
